@@ -23,13 +23,21 @@ const townFillPaint = {
 //import { RMap } from "maplibre-react-components";
 import {
   CSSProperties,
-  useState
+  useState,
+  useEffect
 } from "react";
 import {
   LayerSwitcherControl,
-  styles,
+  loadMapStyles,
+  loadedStyles,
   type StyleID
 } from "./LayerSwitcherControl";
+import {
+  OverlayControl,
+  loadOverlayLayers,
+  overlayLayersData,
+  type LayerState
+} from "./OverlayControl";
 
 const mapCSS: CSSProperties = {
   minHeight: 500,
@@ -44,34 +52,130 @@ import { mountainIconFactory } from "./util";
 const tachikawa: [number, number] = [139.4075, 35.7011];
  
 function App() {
-
-   const [
-    style,
-    setStyle
-  ] = useState<StyleID>("国土地理院ベクタ地図");
-
+  const [style, setStyle] = useState<StyleID>("");
+  const [isStylesLoaded, setIsStylesLoaded] = useState(false);
   const [markerPosition, setMarkerPosition] = useState<null | [number, number]>(
     null,
   );
+  const [layerStates, setLayerStates] = useState<LayerState[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      loadMapStyles(),
+      loadOverlayLayers()
+    ]).then(([stylesData, overlaysData]) => {
+      setStyle(stylesData.defaultStyle);
+
+      // Initialize layer states
+      const initialLayerStates: LayerState[] = Object.values(overlaysData.overlayLayers).map(layer => ({
+        id: layer.id,
+        visible: layer.defaultVisible,
+        opacity: 70 // Default opacity at 70%
+      }));
+      setLayerStates(initialLayerStates);
+
+      setIsStylesLoaded(true);
+    }).catch((error) => {
+      console.error('Failed to load map configuration:', error);
+    });
+  }, []);
+
+  const handleLayerToggle = (layerId: string, visible: boolean) => {
+    setLayerStates(prev =>
+      prev.map(layer =>
+        layer.id === layerId ? { ...layer, visible } : layer
+      )
+    );
+  };
+
+  const handleOpacityChange = (layerId: string, opacity: number) => {
+    setLayerStates(prev =>
+      prev.map(layer =>
+        layer.id === layerId ? { ...layer, opacity } : layer
+      )
+    );
+  };
+
+  const handleLayerReorder = (dragIndex: number, hoverIndex: number) => {
+    setLayerStates(prev => {
+      const newStates = [...prev];
+      const draggedItem = newStates[dragIndex];
+      newStates.splice(dragIndex, 1);
+      newStates.splice(hoverIndex, 0, draggedItem);
+      return newStates;
+    });
+  };
  
   function handleClick(e: any) {
     setMarkerPosition(e.lngLat.toArray());
   }
- 
+
+  if (!isStylesLoaded || !style) {
+    return <div>Loading map styles...</div>;
+  }
+
+  const currentMapStyle = loadedStyles[style];
+  if (!currentMapStyle) {
+    return <div>Map style not found: {style}</div>;
+  }
+
   return (
     <RMap
       minZoom={6}
       onClick={handleClick}
       initialCenter={tachikawa}
       initialZoom={11}
-      mapStyle={styles[style]}
+      mapStyle={currentMapStyle}
       style={mapCSS}
     >
 
       <LayerSwitcherControl style={style} setStyle={setStyle} />
+      <OverlayControl
+        layerStates={layerStates}
+        onLayerToggle={handleLayerToggle}
+        onOpacityChange={handleOpacityChange}
+        onLayerReorder={handleLayerReorder}
+      />
       <RNavigationControl position="top-right" visualizePitch={true} />
 
-       <RSource key="town" id="town" type="geojson" data={townData} />
+      {/* Overlay layers */}
+      {overlayLayersData && layerStates
+        .filter(layerState => layerState.visible)
+        .map(layerState => {
+          const layerConfig = overlayLayersData.overlayLayers[layerState.id];
+          if (!layerConfig) return null;
+
+          // Calculate opacity (0-100 to 0-1, with 100 being most transparent)
+          const opacityValue = 1 - (layerState.opacity / 100);
+
+          // Create modified layer config with opacity
+          const layerWithOpacity = {
+            ...layerConfig.layer,
+            paint: {
+              ...layerConfig.layer.paint,
+              ...(layerConfig.type === 'raster'
+                ? { 'raster-opacity': opacityValue }
+                : { 'line-opacity': opacityValue, 'fill-opacity': opacityValue }
+              )
+            }
+          };
+
+          return (
+            <div key={layerState.id}>
+              <RSource
+                id={`overlay-${layerState.id}`}
+                {...layerConfig.source}
+              />
+              <RLayer
+                id={`overlay-layer-${layerState.id}`}
+                source={`overlay-${layerState.id}`}
+                {...layerWithOpacity}
+              />
+            </div>
+          );
+        })}
+
+      <RSource key="town" id="town" type="geojson" data={townData} />
       <RLayer
         key="town-fill"
         id="town-fill"

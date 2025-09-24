@@ -1,0 +1,85 @@
+{
+  "overlayLayers": {
+    "flood-hazard": {
+      "id": "flood-hazard",
+      "name": "洪水浸水想定区域",
+      "type": "raster",
+      "source": {
+        "type": "raster",
+        "tiles": [
+          "https://disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_data/{z}/{x}/{y}.png"
+        ],
+        "tileSize": 256,
+        "attribution": "© 国土地理院"
+      },
+      "layer": {
+        "type": "raster",
+        "paint": {
+          "raster-opacity": 0.7
+        }
+      },
+      "defaultVisible": false
+    },
+    "landslide-hazard": {
+      "id": "landslide-hazard",
+      "name": "土砂災害警戒区域",
+      "type": "raster",
+      "source": {
+        "type": "raster",
+        "tiles": [
+          "https://disaportaldata.gsi.go.jp/raster/05_dosekiryukeikaikuiki/{z}/{x}/{y}.png"
+        ],
+        "tileSize": 256,
+        "attribution": "© 国土地理院"
+      },
+      "layer": {
+        "type": "raster",
+        "paint": {
+          "raster-opacity": 0.6
+        }
+      },
+      "defaultVisible": false
+    },
+    "railway": {
+      "id": "railway",
+      "name": "鉄道路線",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "https://cyberjapandata.gsi.go.jp/xyz/experimental_railcl/{z}/{x}/{y}.pbf"
+        ],
+        "attribution": "© 国土地理院"
+      },
+      "layer": {
+        "source-layer": "railcl",
+        "type": "line",
+        "paint": {
+          "line-color": "#0066cc",
+          "line-width": 2
+        }
+      },
+      "defaultVisible": false
+    },
+    "contour": {
+      "id": "contour",
+      "name": "等高線",
+      "type": "raster",
+      "source": {
+        "type": "raster",
+        "tiles": [
+          "https://cyberjapandata.gsi.go.jp/xyz/contour/{z}/{x}/{y}.png"
+        ],
+        "tileSize": 256,
+        "attribution": "© 国土地理院"
+      },
+      "layer": {
+        "type": "raster",
+        "paint": {
+          "raster-opacity": 0.8
+        }
+      },
+      "defaultVisible": false
+    }
+  }
+}
