@@ -7,7 +7,7 @@ import "./slider-styles.css";
 export interface OverlayLayerConfig {
   id: string;
   name: string;
-  type: 'raster' | 'vector';
+  type: 'raster' | 'vector' | 'geojson';
   source: any;
   layer: any;
   defaultVisible: boolean;
@@ -261,7 +261,14 @@ export function OverlayControl({
               </button>
             </div>
 
-            <div style={{ padding: '0 16px 16px 16px' }}>
+            <div
+              style={{
+                padding: '0 16px 16px 16px',
+                maxHeight: 'calc(60vh - 80px)',
+                overflowY: 'auto',
+                overflowX: 'hidden'
+              }}
+            >
               {layerStates.map((layerState, index) => {
                 const layerConfig = layers?.overlayLayers[layerState.id];
                 if (!layerConfig) return null;

@@ -1,82 +1,371 @@
 {
   "overlayLayers": {
-    "flood-hazard": {
-      "id": "flood-hazard",
-      "name": "洪水浸水想定区域",
-      "type": "raster",
-      "source": {
-        "type": "raster",
-        "tiles": [
-          "https://disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_data/{z}/{x}/{y}.png"
-        ],
-        "tileSize": 256,
-        "attribution": "© 国土地理院"
-      },
-      "layer": {
-        "type": "raster",
-        "paint": {
-          "raster-opacity": 0.7
-        }
-      },
-      "defaultVisible": false
-    },
-    "landslide-hazard": {
-      "id": "landslide-hazard",
-      "name": "土砂災害警戒区域",
-      "type": "raster",
-      "source": {
-        "type": "raster",
-        "tiles": [
-          "https://disaportaldata.gsi.go.jp/raster/05_dosekiryukeikaikuiki/{z}/{x}/{y}.png"
-        ],
-        "tileSize": 256,
-        "attribution": "© 国土地理院"
-      },
-      "layer": {
-        "type": "raster",
-        "paint": {
-          "raster-opacity": 0.6
-        }
-      },
-      "defaultVisible": false
-    },
-    "railway": {
-      "id": "railway",
-      "name": "鉄道路線",
+    "admin-area": {
+      "id": "admin-area",
+      "name": "行政区画",
       "type": "vector",
       "source": {
         "type": "vector",
         "tiles": [
-          "https://cyberjapandata.gsi.go.jp/xyz/experimental_railcl/{z}/{x}/{y}.pbf"
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
         ],
-        "attribution": "© 国土地理院"
+        "attribution": "© 国土地理院最適化ベクトルタイル"
       },
       "layer": {
-        "source-layer": "railcl",
-        "type": "line",
+        "source-layer": "AdmArea",
+        "type": "fill",
         "paint": {
-          "line-color": "#0066cc",
-          "line-width": 2
+          "fill-color": "rgba(255,255,255,0.8)",
+          "fill-outline-color": "rgba(128,128,128,0.8)"
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "water-area": {
+      "id": "water-area",
+      "name": "水域",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "WA",
+        "type": "fill",
+        "paint": {
+          "fill-color": "rgba(190,210,255,0.8)"
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "topography-area": {
+      "id": "topography-area",
+      "name": "地形表記面",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "TpgphArea",
+        "type": "fill",
+        "paint": {
+          "fill-color": "rgba(230,230,210,0.6)"
+        },
+        "layout": {
+          "visibility": "visible"
         }
       },
       "defaultVisible": false
     },
     "contour": {
       "id": "contour",
-      "name": "等高線",
-      "type": "raster",
+      "name": "等高線・等深線",
+      "type": "vector",
       "source": {
-        "type": "raster",
+        "type": "vector",
         "tiles": [
-          "https://cyberjapandata.gsi.go.jp/xyz/contour/{z}/{x}/{y}.png"
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
         ],
-        "tileSize": 256,
-        "attribution": "© 国土地理院"
+        "attribution": "© 国土地理院最適化ベクトルタイル"
       },
       "layer": {
-        "type": "raster",
+        "source-layer": "Cntr",
+        "type": "line",
         "paint": {
-          "raster-opacity": 0.8
+          "line-color": "rgb(200,160,60)",
+          "line-width": 0.8
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "coastline": {
+      "id": "coastline",
+      "name": "海岸線",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "Cstline",
+        "type": "line",
+        "paint": {
+          "line-color": "rgba(0,119,190,0.8)",
+          "line-width": 1.5
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "river-waterline": {
+      "id": "river-waterline",
+      "name": "河川・水涯線",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "WL",
+        "type": "line",
+        "paint": {
+          "line-color": "rgba(0,119,190,1)",
+          "line-width": 1
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "admin-boundary": {
+      "id": "admin-boundary",
+      "name": "行政界",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "AdmBdry",
+        "type": "line",
+        "paint": {
+          "line-color": "rgba(128,0,128,0.7)",
+          "line-width": 1.5,
+          "line-dasharray": [3, 2]
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "road": {
+      "id": "road",
+      "name": "道路",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "RdCL",
+        "type": "line",
+        "paint": {
+          "line-color": "rgba(128,128,128,0.8)",
+          "line-width": 1.5
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "railway": {
+      "id": "railway",
+      "name": "鉄道",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "RailCL",
+        "type": "line",
+        "paint": {
+          "line-color": "rgba(64,64,64,0.9)",
+          "line-width": 2
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "building": {
+      "id": "building",
+      "name": "建築物",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "BldA",
+        "type": "fill",
+        "paint": {
+          "fill-color": "rgba(200,200,200,0.7)",
+          "fill-outline-color": "rgba(128,128,128,0.8)"
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "structure": {
+      "id": "structure",
+      "name": "構造物",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "StrctLine",
+        "type": "line",
+        "paint": {
+          "line-color": "rgba(64,64,64,0.8)",
+          "line-width": 1
+        },
+        "layout": {
+          "visibility": "visible"
+        }
+      },
+      "defaultVisible": false
+    },
+    "contour-label": {
+      "id": "contour-label",
+      "name": "等高線数値",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル"
+      },
+      "layer": {
+        "source-layer": "Cntr",
+        "type": "symbol",
+        "minzoom": 10,
+        "maxzoom": 18,
+        "paint": {
+          "text-color": "#8B4513",
+          "text-halo-color": "#FFFFFF",
+          "text-halo-width": 1.5
+        },
+        "layout": {
+          "visibility": "visible",
+          "text-field": ["coalesce", ["get", "vt_alti"], ["get", "alti"], ""],
+          "text-font": ["NotoSansJP-Regular"],
+          "text-size": 12,
+          "symbol-placement": "point",
+          "text-anchor": "center",
+          "text-allow-overlap": true,
+          "text-ignore-placement": true
+        }
+      },
+      "defaultVisible": false
+    },
+    "place-names": {
+      "id": "place-names",
+      "name": "地名（市町村・県名）",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル",
+        "minzoom": 4,
+        "maxzoom": 16
+      },
+      "layer": {
+        "source-layer": "Anno",
+        "type": "symbol",
+        "minzoom": 6,
+        "maxzoom": 18,
+        "filter": ["in", ["get", "ftCode"], ["literal", [411, 412, 413, 421, 422]]],
+        "paint": {
+          "text-color": "#2E4057",
+          "text-halo-color": "#FFFFFF",
+          "text-halo-width": 2
+        },
+        "layout": {
+          "visibility": "visible",
+          "text-field": ["coalesce", ["get", "vt_text"], ["get", "knj"], ["get", "name"], ""],
+          "text-font": ["NotoSansJP-Regular"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 6, 10, 16, 16],
+          "text-anchor": "center",
+          "text-allow-overlap": false,
+          "text-ignore-placement": false,
+          "text-optional": true
+        }
+      },
+      "defaultVisible": false
+    },
+    "station-names": {
+      "id": "station-names",
+      "name": "駅名・施設名",
+      "type": "vector",
+      "source": {
+        "type": "vector",
+        "tiles": [
+          "pmtiles://https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles/{z}/{x}/{y}"
+        ],
+        "attribution": "© 国土地理院最適化ベクトルタイル",
+        "minzoom": 4,
+        "maxzoom": 16
+      },
+      "layer": {
+        "source-layer": "Anno",
+        "type": "symbol",
+        "minzoom": 10,
+        "maxzoom": 18,
+        "paint": {
+          "text-color": "#8B0000",
+          "text-halo-color": "#FFFFFF",
+          "text-halo-width": 2
+        },
+        "layout": {
+          "visibility": "visible",
+          "text-field": ["coalesce", ["get", "vt_text"], ["get", "knj"], ["get", "name"], ""],
+          "text-font": ["NotoSansJP-Regular"],
+          "text-size": 12,
+          "text-anchor": "center",
+          "text-allow-overlap": false,
+          "text-ignore-placement": false,
+          "text-optional": true
         }
       },
       "defaultVisible": false

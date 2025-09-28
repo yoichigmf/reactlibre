@@ -2,6 +2,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "maplibre-theme/icons.default.css";
 import "maplibre-theme/modern.css";
 
+// PMTiles support
+import { PMTiles, Protocol } from 'pmtiles';
+import maplibregl from 'maplibre-gl';
 
 // we needed this for the RGradientMap component
 import "maplibre-react-components/style.css";
@@ -22,7 +25,7 @@ const townFillPaint = {
 
 //import { RMap } from "maplibre-react-components";
 import {
-  CSSProperties,
+  type CSSProperties,
   useState,
   useEffect
 } from "react";
@@ -50,7 +53,15 @@ const mapCSS: CSSProperties = {
 import { mountainIconFactory } from "./util";
  
 const tachikawa: [number, number] = [139.4075, 35.7011];
- 
+
+// Register PMTiles protocol
+const protocol = new Protocol();
+maplibregl.addProtocol("pmtiles", protocol.tile);
+
+// Create PMTiles instance for our data
+const pmtiles = new PMTiles("https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/optimal_bvmap-v1.pmtiles");
+protocol.add(pmtiles);
+
 function App() {
   const [style, setStyle] = useState<StyleID>("");
   const [isStylesLoaded, setIsStylesLoaded] = useState(false);
@@ -70,7 +81,7 @@ function App() {
       const initialLayerStates: LayerState[] = Object.values(overlaysData.overlayLayers).map(layer => ({
         id: layer.id,
         visible: layer.defaultVisible,
-        opacity: 70 // Default opacity at 70%
+        opacity: 30 // Default opacity at 30%
       }));
       setLayerStates(initialLayerStates);
 
@@ -125,7 +136,7 @@ function App() {
       onClick={handleClick}
       initialCenter={tachikawa}
       initialZoom={11}
-      mapStyle={currentMapStyle}
+      mapStyle={currentMapStyle as any}
       style={mapCSS}
     >
 
@@ -142,23 +153,52 @@ function App() {
       {overlayLayersData && layerStates
         .filter(layerState => layerState.visible)
         .map(layerState => {
-          const layerConfig = overlayLayersData.overlayLayers[layerState.id];
+          const layerConfig = overlayLayersData!.overlayLayers[layerState.id];
           if (!layerConfig) return null;
 
           // Calculate opacity (0-100 to 0-1, with 100 being most transparent)
           const opacityValue = 1 - (layerState.opacity / 100);
 
           // Create modified layer config with opacity
+          let opacityProps = {};
+          if (layerConfig.type === 'raster') {
+            opacityProps = { 'raster-opacity': opacityValue };
+          } else if (layerConfig.type === 'vector' || layerConfig.type === 'geojson') {
+            // Set opacity based on layer type
+            switch (layerConfig.layer.type) {
+              case 'line':
+                opacityProps = { 'line-opacity': opacityValue };
+                break;
+              case 'fill':
+                opacityProps = { 'fill-opacity': opacityValue };
+                break;
+              case 'circle':
+                opacityProps = { 'circle-opacity': opacityValue };
+                break;
+              case 'symbol':
+                opacityProps = { 'text-opacity': opacityValue, 'icon-opacity': opacityValue };
+                break;
+              default:
+                opacityProps = { 'line-opacity': opacityValue };
+            }
+          }
+
           const layerWithOpacity = {
             ...layerConfig.layer,
             paint: {
               ...layerConfig.layer.paint,
-              ...(layerConfig.type === 'raster'
-                ? { 'raster-opacity': opacityValue }
-                : { 'line-opacity': opacityValue, 'fill-opacity': opacityValue }
-              )
-            }
+              ...opacityProps
+            },
+            // Force vector/geojson layers to appear above background layers
+            ...((layerConfig.type === 'vector' || layerConfig.type === 'geojson') && {
+              layout: {
+                ...layerConfig.layer.layout,
+                visibility: 'visible'
+              }
+            })
           };
+
+
 
           return (
             <div key={layerState.id}>
@@ -170,6 +210,9 @@ function App() {
                 id={`overlay-layer-${layerState.id}`}
                 source={`overlay-${layerState.id}`}
                 {...layerWithOpacity}
+                {...(layerConfig.type === 'vector' && layerConfig.layer['source-layer'] && {
+                  sourceLayer: layerConfig.layer['source-layer']
+                })}
               />
             </div>
           );

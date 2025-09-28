@@ -1,6 +1,6 @@
 // LayerSwitcherControl.tsx
 import { useRControl } from "maplibre-react-components";
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 export interface MapStyleConfig {
@@ -26,7 +26,7 @@ export const loadMapStyles = async (): Promise<MapStylesData> => {
 
     // Transform styles for compatibility
     loadedStyles = {};
-    for (const [key, config] of Object.entries(data.styles)) {
+    for (const [, config] of Object.entries(data.styles)) {
       if (config.url) {
         loadedStyles[config.name] = config.url;
       } else if (config.style) {
@@ -69,7 +69,6 @@ export function LayerSwitcherControl({
     return null;
   }
 
-  const currentStyleName = Object.values(styles.styles).find(s => s.name === style)?.name || style;
 
   return createPortal(
     <div style={{ position: 'relative' }}>

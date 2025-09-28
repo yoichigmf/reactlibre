@@ -3,13 +3,15 @@
     "gsi-vector": {
       "id": "gsi-vector",
       "name": "国土地理院ベクタ地図",
-      "url": "https://gsi-cyberjapan.github.io/gsivectortile-mapbox-gl-js/std.json"
+      "url": "/std.json"
     },
     "gsi-photo": {
       "id": "gsi-photo",
       "name": "航空写真",
       "style": {
         "version": 8,
+        "glyphs": "https://gsi-cyberjapan.github.io/optimal_bvmap/glyphs/{fontstack}/{range}.pbf",
+        "sprite": "https://gsi-cyberjapan.github.io/optimal_bvmap/sprite/std",
         "sources": {
           "gsi-photo": {
             "type": "raster",
@@ -33,6 +35,25 @@
       "id": "osm-japan",
       "name": "OpenStreetMap Japan",
       "url": "https://tile.openstreetmap.jp/styles/osm-bright-ja/style.json"
+    },
+    "no-background": {
+      "id": "no-background",
+      "name": "背景なし",
+      "style": {
+        "version": 8,
+        "glyphs": "https://gsi-cyberjapan.github.io/optimal_bvmap/glyphs/{fontstack}/{range}.pbf",
+        "sprite": "https://gsi-cyberjapan.github.io/optimal_bvmap/sprite/std",
+        "sources": {},
+        "layers": [
+          {
+            "id": "background",
+            "type": "background",
+            "paint": {
+              "background-color": "rgba(255,255,255,0.05)"
+            }
+          }
+        ]
+      }
     }
   },
   "defaultStyle": "国土地理院ベクタ地図"

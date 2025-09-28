@@ -141,3 +141,43 @@ LayerSwitcherControlは3つの異なるマップスタイルを管理します�
 3. **状態管理** - useStateによる複雑な状態の管理
 4. **CSSスタイリング** - カスタムスライダーとドラッグ&ドロップの視覚的フィードバック
 5. **ファイル構造** - `/public/`での設定ファイル管理、`src/`でのコンポーネント分離
+
+### PMTilesベースの注記レイヤ機能実装
+**実装内容**:
+1. **注記レイヤの復活と修正** - 等高線数値、地名、駅名の日本語テキスト表示
+   - `Anno` source-layerからの地名・駅名データ取得
+   - `Cntr` source-layerからの等高線数値データ取得
+   - PMTiles vectorタイルの正しいフィールド名特定（`vt_text`, `vt_alti`）
+
+2. **glyphsエラーの解決**
+   - map-styles.jsonの全スタイルに`glyphs`プロパティを追加
+   - 国土地理院標準glyphsの参照（`https://gsi-cyberjapan.github.io/optimal_bvmap/glyphs/{fontstack}/{range}.pbf`）
+   - 航空写真・背景なしスタイルへのglyphsとsprite設定追加
+
+3. **std.json参照の修正**
+   - 外部std.json URLからローカル`/std.json`参照に変更（net::ERR_CONNECTION_RESETエラー解決）
+   - ローカルstd.jsonファイルの活用
+
+4. **透過率初期値の調整**
+   - オーバーレイレイヤの初期透過率を70%から30%に変更（App.tsx:84行目）
+   - より見やすい初期設定の提供
+
+**技術的成果**:
+1. **データフィールドの特定**
+   - std.jsonから実際のフィールド名`vt_text`（注記）、`vt_alti`（標高）を特定
+   - PMTilesのsource-layer構造の理解（`Anno`, `Cntr`の動作確認）
+
+2. **レイヤ設定の最適化**
+   - ftCodeによる地物分類フィルタリング（411-422: 市町村・県名, 521-534: 駅名・施設）
+   - ズームレベル応答テキストサイズ（`interpolate`）
+   - 適切なtext-anchorとtext-placementの設定
+
+3. **デバッグプロセス**
+   - 段階的テストレイヤによる問題特定
+   - source-layer別動作確認（Cntr ✅, Anno ✅, AdmArea ❌）
+   - フィールド名とフォントレンダリングの分離検証
+
+**最終的な注記レイヤ構成**:
+- **等高線数値**: `vt_alti`フィールド、茶色表示、12px
+- **地名（市町村・県名）**: `vt_text`フィールド、ftCode 411-422フィルタ、濃紺色、ズーム応答サイズ
+- **駅名・施設名**: `vt_text`フィールド、暗赤色、12px
