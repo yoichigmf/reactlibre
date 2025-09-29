@@ -37,8 +37,9 @@ import {
 } from "./LayerSwitcherControl";
 import {
   OverlayControl,
-  loadOverlayLayers,
-  overlayLayersData,
+  loadLayerCatalog,
+  layerCatalogData,
+  groupLayersData,
   type LayerState
 } from "./OverlayControl";
 
@@ -73,17 +74,12 @@ function App() {
   useEffect(() => {
     Promise.all([
       loadMapStyles(),
-      loadOverlayLayers()
-    ]).then(([stylesData, overlaysData]) => {
+      loadLayerCatalog()
+    ]).then(([stylesData, catalogData]) => {
       setStyle(stylesData.defaultStyle);
 
-      // Initialize layer states
-      const initialLayerStates: LayerState[] = Object.values(overlaysData.overlayLayers).map(layer => ({
-        id: layer.id,
-        visible: layer.defaultVisible,
-        opacity: 30 // Default opacity at 30%
-      }));
-      setLayerStates(initialLayerStates);
+      // Initialize empty layer states - layers will be loaded on-demand
+      setLayerStates([]);
 
       setIsStylesLoaded(true);
     }).catch((error) => {
@@ -92,11 +88,17 @@ function App() {
   }, []);
 
   const handleLayerToggle = (layerId: string, visible: boolean) => {
-    setLayerStates(prev =>
-      prev.map(layer =>
-        layer.id === layerId ? { ...layer, visible } : layer
-      )
-    );
+    setLayerStates(prev => {
+      const existingIndex = prev.findIndex(layer => layer.id === layerId);
+      if (existingIndex !== -1) {
+        return prev.map(layer =>
+          layer.id === layerId ? { ...layer, visible } : layer
+        );
+      } else {
+        // 新しいレイヤを追加
+        return [...prev, { id: layerId, visible, opacity: 30 }];
+      }
+    });
   };
 
   const handleOpacityChange = (layerId: string, opacity: number) => {
@@ -107,13 +109,23 @@ function App() {
     );
   };
 
-  const handleLayerReorder = (dragIndex: number, hoverIndex: number) => {
+  const handleLayerReorder = (groupId: string, dragIndex: number, hoverIndex: number) => {
+    // グループ内でのレイヤ順序変更のロジックを実装
     setLayerStates(prev => {
-      const newStates = [...prev];
-      const draggedItem = newStates[dragIndex];
-      newStates.splice(dragIndex, 1);
-      newStates.splice(hoverIndex, 0, draggedItem);
-      return newStates;
+      const groupLayers = groupLayersData[groupId];
+      if (!groupLayers) return prev;
+
+      const groupLayerIds = Object.keys(groupLayers.overlayLayers);
+      const groupLayerStates = prev.filter(state => groupLayerIds.includes(state.id));
+      const otherLayerStates = prev.filter(state => !groupLayerIds.includes(state.id));
+
+      if (dragIndex < groupLayerStates.length && hoverIndex < groupLayerStates.length) {
+        const draggedItem = groupLayerStates[dragIndex];
+        groupLayerStates.splice(dragIndex, 1);
+        groupLayerStates.splice(hoverIndex, 0, draggedItem);
+      }
+
+      return [...otherLayerStates, ...groupLayerStates];
     });
   };
  
@@ -150,10 +162,17 @@ function App() {
       <RNavigationControl position="top-right" visualizePitch={true} />
 
       {/* Overlay layers */}
-      {overlayLayersData && layerStates
+      {layerStates
         .filter(layerState => layerState.visible)
         .map(layerState => {
-          const layerConfig = overlayLayersData!.overlayLayers[layerState.id];
+          // 全グループからレイヤ設定を検索
+          let layerConfig = null;
+          for (const groupData of Object.values(groupLayersData)) {
+            if (groupData.overlayLayers[layerState.id]) {
+              layerConfig = groupData.overlayLayers[layerState.id];
+              break;
+            }
+          }
           if (!layerConfig) return null;
 
           // Calculate opacity (0-100 to 0-1, with 100 being most transparent)

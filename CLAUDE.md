@@ -181,3 +181,117 @@ LayerSwitcherControlは3つの異なるマップスタイルを管理します�
 - **等高線数値**: `vt_alti`フィールド、茶色表示、12px
 - **地名（市町村・県名）**: `vt_text`フィールド、ftCode 411-422フィルタ、濃紺色、ズーム応答サイズ
 - **駅名・施設名**: `vt_text`フィールド、暗赤色、12px
+
+### グループベースオーバーレイシステムの実装
+**実装日**: 2025年9月30日
+
+**背景と要求**:
+従来の単一ファイル（`overlay-layers.json`）によるフラットなオーバーレイ管理から、階層的なグループベースシステムへの完全移行を実施。ユーザビリティ向上と設定ファイル管理の効率化を目的とした。
+
+**アーキテクチャ変更**:
+1. **カタログベース設計**
+   - `/public/layercat.json` - グループ定義と参照ファイルのカタログ
+   - `/public/disaster-map.json` - ハザードマップグループの設定
+   - `/public/overlay-layers.json` - 地理院ベクトルタイルグループの設定
+
+2. **動的ローディングシステム**
+   ```typescript
+   // 新しいインターフェース群
+   interface LayerCatalogGroup {
+     id: string;
+     name: string;
+     file: string;
+     format?: string;
+   }
+
+   interface GroupLayersData {
+     [groupId: string]: OverlayLayersData;
+   }
+   ```
+
+**ファイル構造の変更**:
+```
+public/
+├── layercat.json          # グループカタログ（新規）
+├── disaster-map.json      # ハザードマップ定義（既存活用）
+└── overlay-layers.json    # 地理院ベクトルタイル定義（既存転用）
+```
+
+**OverlayControl.tsx 完全リライト**:
+1. **階層UI実装**
+   - グループ名の一覧表示（初期状態）
+   - グループクリックで展開/折りたたみ機能
+   - ▼アイコンの回転アニメーション
+   - グループ内レイヤリストの動的表示
+
+2. **動的ローディング**
+   ```typescript
+   const handleGroupToggle = async (groupId: string) => {
+     // グループ初回展開時に定義ファイルを読み込み
+     if (!loadedGroups.has(groupId) && catalog) {
+       await loadGroupLayers(groupId, groupInfo.file);
+       setLoadedGroups(prev => new Set(prev).add(groupId));
+     }
+   };
+   ```
+
+3. **状態管理の改善**
+   - `expandedGroups`: 展開中のグループ管理
+   - `loadedGroups`: ロード済みグループ管理
+   - レイヤ状態の動的初期化（デフォルト値: `visible: false, opacity: 30`）
+
+**App.tsx の統合**:
+1. **初期化処理の変更**
+   ```typescript
+   Promise.all([
+     loadMapStyles(),
+     loadLayerCatalog()  // overlay-layers.json → layercat.json
+   ]).then(([stylesData, catalogData]) => {
+     setLayerStates([]);  // 空の初期状態、グループ展開時に動的追加
+   });
+   ```
+
+2. **レイヤレンダリングの改善**
+   - 全グループ横断検索によるレイヤ設定特定
+   - グループIDに関係なく統一的なレイヤ管理
+
+**UI/UX の向上**:
+1. **直感的な階層ナビゲーション**
+   - 「ハザードマップ」「地理院ベクタタイル」のグループ単位表示
+   - ワンクリックでのグループ内容表示/非表示
+
+2. **グループ内ドラッグ&ドロップ**
+   - グループ内でのレイヤ順序変更機能維持
+   - グループ境界を越えた移動は制限
+
+3. **設定の継承**
+   - 既存の透過率制御とスライダー機能
+   - チェックボックスによる表示/非表示制御
+
+**技術的解決事項**:
+1. **初期レイヤ状態問題**
+   - 問題: `layerStates`が空の場合、`find()`が`undefined`を返してレイヤが表示されない
+   - 解決: デフォルトレイヤ状態オブジェクトの動的生成
+   ```typescript
+   const layerState = layerStates.find(ls => ls.id === layerId) || {
+     id: layerId, visible: false, opacity: 30
+   };
+   ```
+
+2. **JSON構文エラー修正**
+   - `disaster-map.json`の末尾構文エラー修正（`},}`→`}}`）
+
+**運用上の利点**:
+1. **スケーラビリティ**: 新しいレイヤグループの追加が容易
+2. **保守性**: グループごとの設定分離により管理効率向上
+3. **UX向上**: 階層的表示による視認性とナビゲーション改善
+4. **設定管理**: カタログシステムによる一元的な構成管理
+
+**検証済み機能**:
+✅ グループ一覧表示
+✅ グループ展開/折りたたみ
+✅ レイヤ動的ロード
+✅ レイヤ表示切り替え
+✅ 透過率制御
+✅ グループ内ドラッグ&ドロップ
+✅ 複数グループ同時展開対応

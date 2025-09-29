@@ -1,0 +1,15 @@
+{
+  "layercatalogfiles": {
+    "disaster-map": {
+      "id": "disaster-map",
+      "name": "ハザードマップ",
+      "file": "public/disaster-map.json"  
+    },
+    "basemap": {
+      "id": "basemap",
+      "name": "地理院ベクタタイル",
+      "file": "public/overlay-layers.json"  ,
+      "format":"pmtiles"
+    }
+  }
+}
